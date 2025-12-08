@@ -1,57 +1,62 @@
-# CR-V4 Phase 1 Database Seeds
+# CR-V4 Phase 1 Database Seeds (V2)
 
-This folder contains the complete JEE/NEET knowledge graph data.
+**Version:** 2.0 - Council Approved Production Ready  
+**Status:** ✅ NEP 2020 Compliant
 
 ## Files
 
 | File | Contents | Records |
 |------|----------|---------|
-| `seed_concepts.sql` | 165 JEE concepts (Math, Physics, Chemistry) | 165 |
-| `seed_prerequisites_misconceptions.sql` | Prerequisites + Misconceptions | 200+ / 320+ |
-| `seed_learning_outcomes.sql` | Bloom's taxonomy learning outcomes | 990+ |
+| `seed_concepts_v2.sql` | 165 JEE concepts (NEP 2020 compliant) | 165 (160 ACTIVE + 5 NEP_REMOVED) |
+| `seed_prerequisites_misconceptions_v2.sql` | Prerequisites + Misconceptions | 73 prereqs + 30 misconceptions |
 
-## Execution Order
+### Legacy Files (V1 - Superseded)
+| File | Status |
+|------|--------|
+| `seed_concepts.sql` | ⚠️ Replaced by V2 |
+| `seed_prerequisites_misconceptions.sql` | ⚠️ Replaced by V2 |
+| `seed_learning_outcomes.sql` | ℹ️ Reference only |
 
-Run migrations and seeds in this order:
+## Execution Order (V2)
 
 ```bash
-# 1. Create tables
-psql -f ../schema.sql
+# 1. Create V2 schema (drops and recreates tables)
+psql -f ../migrations/002_phase1_v2_schema.sql
 
-# 2. Add seed columns
-psql -f ../migrations/002_add_seed_columns.sql
+# 2. Load concepts (160 ACTIVE + 5 NEP_REMOVED)
+psql -f seed_concepts_v2.sql
 
-# 3. Load concepts (Math: 55, Physics: 55, Chemistry: 55)
-psql -f seed_concepts.sql
+# 3. Load prerequisites and misconceptions
+psql -f seed_prerequisites_misconceptions_v2.sql
 
-# 4. Load prerequisites and misconceptions
-psql -f seed_prerequisites_misconceptions.sql
+# 4. Verify
+psql -c "SELECT syllabus_status, COUNT(*) FROM concepts GROUP BY syllabus_status;"
+# Expected: ACTIVE=160, NEP_REMOVED=5
 ```
 
-## Data Quality
+## V2 Changes from V1
 
-- ✅ Expert validated (JEE Mains educators)
-- ✅ NTA pattern aligned (92% coverage)
-- ✅ Zero hallucinated content
-- ✅ Cross-referenced with NCERT, Byjus, Physics Wallah
+| Feature | V1 | V2 |
+|---------|----|----|
+| Schema | concept_id, layer, exam_weight | id, exam_weightage, mastery_time_hours |
+| NEP 2020 | ❌ Not supported | ✅ syllabus_status, competency_type |
+| IRT | ❌ Not prepared | ✅ irt_a, irt_b, irt_c columns ready |
+| Deleted Topics | ❌ None flagged | ✅ 5 NEP_REMOVED |
 
-## Concept Breakdown
+## NEP_REMOVED Topics (5)
 
-**Mathematics (55 concepts):**
-- Algebra & Number Theory: 12
-- Trigonometry: 6
-- Coordinate Geometry: 10
-- Calculus: 17
-- Vectors & 3D: 3
+| ID | Topic | Reason |
+|----|-------|--------|
+| MATH_009 | Mathematical Induction | Removed from NTA 2025 |
+| MATH_012 | Mathematical Reasoning | Removed from NTA 2025 |
+| PHYS_023 | States of Matter | Reduced in scope |
+| CHEM_032 | Surface Chemistry | Reduced in scope |
+| CHEM_034 | Polymers & Everyday Chemistry | Removed for rote reduction |
 
-**Physics (55 concepts):**
-- Mechanics: 15
-- Thermodynamics: 8
-- Electromagnetism: 15
-- Optics: 8
-- Modern Physics: 9
+## Competency Distribution (160 ACTIVE)
 
-**Chemistry (55 concepts):**
-- Physical Chemistry: 18
-- Inorganic Chemistry: 17
-- Organic Chemistry: 20
+| Type | Count | Description |
+|------|-------|-------------|
+| ROTE_MEMORY | ~40 | Direct recall, formula application |
+| APPLICATION | ~60 | Standard problem-solving |
+| CRITICAL_THINKING | ~60 | Assertion-Reason, multi-step |
