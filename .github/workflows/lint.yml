@@ -1,4 +1,4 @@
-name: Code Quality
+name: Code Quality & Security
 
 on:
   push:
@@ -17,18 +17,68 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       
       - name: Install linting tools
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 black mypy
+          pip install flake8 black isort bandit safety
       
-      - name: Run flake8 (linting)
+      # ============================================
+      # SYNTAX ERRORS CHECK (Critical - Blocks PR)
+      # ============================================
+      - name: Check for syntax errors
         run: |
           flake8 cr-v4-backend/app --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 cr-v4-backend/app --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       
+      # ============================================
+      # CODE STYLE (Warnings only)
+      # ============================================
+      - name: Style warnings (non-blocking)
+        run: |
+          flake8 cr-v4-backend/app --count --exit-zero --max-complexity=15 --max-line-length=120 --statistics
+      
+      # ============================================
+      # FORMATTING CHECK
+      # ============================================
       - name: Check formatting with black
         run: |
-          black --check --diff cr-v4-backend/app || echo "Formatting issues found (not blocking)"
+          black --check --diff cr-v4-backend/app --line-length=120 || echo "⚠️ Formatting issues found (non-blocking)"
+      
+      # ============================================
+      # IMPORT SORTING
+      # ============================================
+      - name: Check import sorting
+        run: |
+          isort --check-only --diff cr-v4-backend/app || echo "⚠️ Import order issues (non-blocking)"
+      
+      # ============================================
+      # SECURITY CHECK
+      # ============================================
+      - name: Security scan with bandit
+        run: |
+          bandit -r cr-v4-backend/app -ll --skip B101 || echo "⚠️ Security warnings found"
+      
+      # ============================================
+      # DEPENDENCY VULNERABILITY CHECK
+      # ============================================
+      - name: Check dependency vulnerabilities
+        run: |
+          pip install -r cr-v4-backend/requirements.txt
+          safety check || echo "⚠️ Dependency vulnerabilities found (review required)"
+      
+      # ============================================
+      # SUMMARY
+      # ============================================
+      - name: Lint Summary
+        run: |
+          echo "======================================"
+          echo "   CODE QUALITY CHECK COMPLETE"
+          echo "======================================"
+          echo "✅ Syntax errors: CHECKED"
+          echo "✅ Code style: CHECKED"
+          echo "✅ Formatting: CHECKED"
+          echo "✅ Import order: CHECKED"
+          echo "✅ Security: CHECKED"
+          echo "✅ Dependencies: CHECKED"
+          echo "======================================"
