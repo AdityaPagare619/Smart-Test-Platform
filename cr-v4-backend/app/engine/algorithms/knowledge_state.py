@@ -869,6 +869,17 @@ def test_stability_calculation():
 # RUN ALL TESTS
 # ============================================================================
 
+def run_all_tests() -> None:
+    """Run all Knowledge State tests. Called by CI/CD pipeline."""
+    print("Running Knowledge State Tracker tests...")
+    test_knowledge_state_creation()
+    test_single_interaction()
+    test_multiple_correct()
+    test_multiple_incorrect()
+    test_mixed_performance()
+    test_three_time_scales()
+    print("✅ All tests passed!")
+
 if __name__ == "__main__":
     print("\n" + "="*70)
     print("CR-V4 KNOWLEDGE STATE TRACKER TESTS")

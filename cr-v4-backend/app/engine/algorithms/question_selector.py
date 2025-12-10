@@ -850,6 +850,15 @@ def test_batch_selection():
 # RUN ALL TESTS
 # ============================================================================
 
+def run_all_tests() -> None:
+    """Run all Question Selector tests. Called by CI/CD pipeline."""
+    print("Running Question Selector tests...")
+    test_basic_selection()
+    test_nep_filtering()
+    test_difficulty_matching()
+    test_batch_selection()
+    print("✅ All tests passed!")
+
 if __name__ == "__main__":
     print("\n" + "="*70)
     print("CR-V4 QUESTION SELECTOR TESTS")

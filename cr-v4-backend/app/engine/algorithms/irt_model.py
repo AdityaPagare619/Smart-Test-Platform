@@ -814,6 +814,15 @@ def test_mastery_ability_conversion():
 # RUN ALL TESTS
 # ============================================================================
 
+def run_all_tests() -> None:
+    """Run all IRT model tests. Called by CI/CD pipeline."""
+    print("Running IRT Model tests...")
+    test_irt_probability_bounds()
+    test_irt_probability_monotonic()
+    test_fisher_information_maximum()
+    test_selection_score_match()
+    print("✅ All tests passed!")
+
 if __name__ == "__main__":
     print("\n" + "="*70)
     print("CR-V4 IRT 3PL MODEL TESTS")

@@ -450,6 +450,16 @@ def test_bayes_update_mathematical_consistency():
 # RUN ALL TESTS
 # ============================================================================
 
+def run_all_tests():
+    """Run all Bayesian learning tests. Called by CI/CD pipeline."""
+    print("Running Bayesian Learning tests...")
+    test_bayes_update_correct_answer_increases_mastery()
+    test_bayes_update_wrong_answer_decreases_mastery()
+    test_bayes_update_confidence_increases()
+    test_bayes_update_bounds()
+    test_bayes_update_mathematical_consistency()
+    print("✅ All tests passed!")
+
 if __name__ == "__main__":
     print("\n" + "="*70)
     print("CR-V4 BAYESIAN LEARNING TESTS")
