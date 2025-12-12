@@ -1,4 +1,4 @@
-name: CI - Complete Algorithm Tests
+name: RANKAK AI Engine - CI Pipeline
 
 on:
   push:
@@ -6,8 +6,15 @@ on:
   pull_request:
     branches: [main, develop]
 
+env:
+  RANKAK_VERSION: "1.0.0"
+
 jobs:
-  test:
+  # ============================================
+  # JOB 1: Algorithm Unit Tests
+  # ============================================
+  algorithm-tests:
+    name: 🧠 Algorithm Tests
     runs-on: ubuntu-latest
     
     strategy:
@@ -184,29 +191,226 @@ jobs:
               PsychologyEngine,
               TestManager,
           )
-          print('✅ All module imports successful')
-          print('✅ Total: 60+ tests across 10 algorithm modules')
+          print('✅ All algorithm module imports successful')
+          "
+
+  # ============================================
+  # JOB 2: RANKAK Simulation System Tests
+  # ============================================
+  simulation-tests:
+    name: 🎯 RANKAK Simulation Tests
+    runs-on: ubuntu-latest
+    needs: algorithm-tests
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install simulation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r cr-v4-backend/requirements.txt
+          pip install pyarrow
+      
+      # ============================================
+      # SIMULATION MODULE IMPORTS
+      # ============================================
+      - name: Verify Simulation Module Imports
+        run: |
+          cd cr-v4-backend
+          python -c "
+          from simulation.config import SimulationConfig, PersonaType, TimeConfig
+          from simulation.agents.genome import StudentGenome, GenomeFactory
+          from simulation.agents.cognitive_core import CognitiveLogicCore
+          from simulation.agents.trust_engine import TrustEngine
+          from simulation.orchestrator.main import SimulationOrchestrator
+          from simulation.orchestrator.time_keeper import TimeKeeper
+          from simulation.observer.god_view import GodViewObserver
+          from simulation.data.storage import DataWriter
+          print('✅ All RANKAK simulation modules imported successfully')
           "
       
       # ============================================
-      # FINAL SUMMARY
+      # GENOME FACTORY TESTS
       # ============================================
-      - name: Test Summary
+      - name: Test Genome Factory
         run: |
-          echo "======================================"
-          echo "   CR-V4 CI/CD PIPELINE COMPLETE"
-          echo "======================================"
-          echo "✅ Academic Calendar: 4 tests"
-          echo "✅ Concept Reveal: 4 tests"
-          echo "✅ Bayesian Learning: 5 tests"
-          echo "✅ Knowledge State: 6 tests"
-          echo "✅ IRT Model: 4 tests"
-          echo "✅ Question Selector: 4 tests"
-          echo "✅ Root Cause Analyzer: 5 tests"
-          echo "✅ Engagement Manager: 5 tests"
-          echo "✅ Psychology Engine: 5 tests"
-          echo "✅ Test Manager: 5 tests"
-          echo "======================================"
-          echo "   TOTAL: 47+ Algorithm Tests"
-          echo "   Python: ${{ matrix.python-version }}"
-          echo "======================================"
+          cd cr-v4-backend
+          python -c "
+          from simulation.agents.genome import GenomeFactory, PersonaType
+          from datetime import date
+          
+          factory = GenomeFactory()
+          genome = factory.create_genome(
+              persona=PersonaType.STEADY_LEARNER,
+              standard=11,
+              target_exam_date=date(2026, 1, 20)
+          )
+          assert genome.persona_type == PersonaType.STEADY_LEARNER
+          assert genome.standard == 11
+          print('✅ Genome Factory: Tests passed')
+          "
+      
+      # ============================================
+      # COGNITIVE CORE TESTS
+      # ============================================
+      - name: Test Cognitive Logic Core
+        run: |
+          cd cr-v4-backend
+          python -c "
+          from simulation.agents.cognitive_core import CognitiveLogicCore
+          
+          clc = CognitiveLogicCore()
+          prob = clc._irt_probability(0.5, 1.0, 0.0, 0.25)
+          assert 0.0 <= prob <= 1.0, 'IRT probability out of bounds'
+          print('✅ Cognitive Logic Core: Tests passed')
+          "
+      
+      # ============================================
+      # TRUST ENGINE TESTS
+      # ============================================
+      - name: Test Trust Engine
+        run: |
+          cd cr-v4-backend
+          python -c "
+          from simulation.agents.trust_engine import TrustEngine, TrustZone
+          from simulation.config import TrustConfig
+          
+          config = TrustConfig()
+          engine = TrustEngine(config)
+          assert engine.state.zone == TrustZone.HIGH
+          print('✅ Trust Engine: Tests passed')
+          "
+      
+      # ============================================
+      # TIME KEEPER TESTS
+      # ============================================
+      - name: Test Time Keeper
+        run: |
+          cd cr-v4-backend
+          python -c "
+          from simulation.orchestrator.time_keeper import TimeKeeper
+          from datetime import datetime
+          
+          keeper = TimeKeeper(compression_ratio=100.0)
+          assert keeper.compression_ratio == 100.0
+          print('✅ Time Keeper: Tests passed')
+          "
+      
+      # ============================================
+      # PARQUET STORAGE TESTS
+      # ============================================
+      - name: Test Parquet Storage
+        run: |
+          cd cr-v4-backend
+          python -c "
+          from simulation.data.storage import DataWriter
+          
+          writer = DataWriter(batch_size=100)
+          assert writer.batch_size == 100
+          print('✅ Parquet Storage: Tests passed')
+          "
+      
+      # ============================================
+      # 8 PERSONA TYPES VALIDATION
+      # ============================================
+      - name: Validate 8 Persona Types
+        run: |
+          cd cr-v4-backend
+          python -c "
+          from simulation.config import PersonaType
+          
+          personas = list(PersonaType)
+          assert len(personas) == 8, f'Expected 8 personas, got {len(personas)}'
+          
+          expected = [
+              'STRUGGLING_PERSISTER',
+              'ANXIOUS_PERFECTIONIST', 
+              'DISENGAGED_GAMER',
+              'CONCEPTUALLY_GAPPED',
+              'STEADY_LEARNER',
+              'FAST_TRACKER',
+              'LATE_JOINER',
+              'DROPPER'
+          ]
+          for name in expected:
+              assert hasattr(PersonaType, name), f'Missing persona: {name}'
+          
+          print('✅ All 8 Persona Types validated')
+          "
+      
+      # ============================================
+      # MINI SIMULATION RUN
+      # ============================================
+      - name: Run Mini Simulation (10 agents, 50 steps)
+        run: |
+          cd cr-v4-backend
+          python -c "
+          from simulation.orchestrator.main import SimulationOrchestrator
+          from simulation.config import SimulationConfig, TimeConfig
+          from datetime import date
+          
+          config = SimulationConfig(
+              time=TimeConfig(compression_ratio=1000.0)
+          )
+          
+          orchestrator = SimulationOrchestrator(config=config)
+          orchestrator.initialize(
+              agent_count=10,
+              target_exam_date=date(2026, 1, 20)
+          )
+          
+          metrics = orchestrator.run(max_steps=50)
+          
+          assert metrics.standard_violations == 0, 'Standard violations detected!'
+          print(f'✅ Mini Simulation: {orchestrator.interactions_count} interactions, 0 violations')
+          "
+
+  # ============================================
+  # JOB 3: Final Summary
+  # ============================================
+  summary:
+    name: 📊 Pipeline Summary
+    runs-on: ubuntu-latest
+    needs: [algorithm-tests, simulation-tests]
+    
+    steps:
+      - name: RANKAK CI Pipeline Complete
+        run: |
+          echo "======================================================"
+          echo "   🚀 RANKAK AI ENGINE - CI PIPELINE COMPLETE"
+          echo "======================================================"
+          echo ""
+          echo "   Version: ${{ env.RANKAK_VERSION }}"
+          echo ""
+          echo "   ✅ Algorithm Tests:"
+          echo "      - Academic Calendar: 4 tests"
+          echo "      - Concept Reveal: 4 tests"
+          echo "      - Bayesian Learning: 5 tests"
+          echo "      - Knowledge State: 6 tests"
+          echo "      - IRT Model: 4 tests"
+          echo "      - Question Selector: 4 tests"
+          echo "      - Root Cause Analyzer: 5 tests"
+          echo "      - Engagement Manager: 5 tests"
+          echo "      - Psychology Engine: 5 tests"
+          echo "      - Test Manager: 5 tests"
+          echo ""
+          echo "   ✅ Simulation Tests:"
+          echo "      - Module Imports: Verified"
+          echo "      - Genome Factory: Passed"
+          echo "      - Cognitive Core: Passed"
+          echo "      - Trust Engine: Passed"
+          echo "      - Time Keeper: Passed"
+          echo "      - Parquet Storage: Passed"
+          echo "      - 8 Personas: Validated"
+          echo "      - Mini Simulation: 0 violations"
+          echo ""
+          echo "======================================================"
+          echo "   TOTAL: 47+ Algorithm + 8 Simulation Tests"
+          echo "======================================================"
+
